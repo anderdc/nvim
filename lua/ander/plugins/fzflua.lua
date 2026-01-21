@@ -37,7 +37,7 @@ return {
 		{
 			"<leader>ft",
 			function()
-				require("fzf-lua").grep({ search = "TODO|FIXME|HACK|NOTE", no_esc = true })
+				require("fzf-lua").grep({ search = "TODO|NOTE", no_esc = true })
 			end,
 			desc = "Find Todos",
 		},
