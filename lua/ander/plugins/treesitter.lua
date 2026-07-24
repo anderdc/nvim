@@ -1,58 +1,56 @@
 return {
 	"nvim-treesitter/nvim-treesitter",
-	branch = "master",
-	event = { "BufReadPre", "BufNewFile" },
+	branch = "main",
+	-- main branch does not support lazy-loading
+	lazy = false,
 	build = ":TSUpdate",
 	config = function()
-		-- import nvim-treesitter plugin
-		local treesitter = require("nvim-treesitter.configs")
+		local treesitter = require("nvim-treesitter")
 
-		-- configure treesitter
-		treesitter.setup({ -- enable syntax highlighting
-			highlight = {
-				enable = true,
-			},
-			-- enable indentation
-			indent = { enable = true },
-			autotag = {
-				enable = true,
-			},
+		-- optional: parsers/queries install location (default shown)
+		treesitter.setup({
+			install_dir = vim.fn.stdpath("data") .. "/site",
+		})
 
-			-- ensure these language parsers are installed
-			ensure_installed = {
-				"json",
-				"javascript",
-				"typescript",
-				"tsx",
-				"yaml",
-				"html",
-				"css",
-				"prisma",
-				"markdown",
-				"markdown_inline",
-				"svelte",
-				"graphql",
-				"bash",
-				"lua",
-				"vim",
-				"dockerfile",
-				"gitignore",
-				"query",
-				"vimdoc",
-				"c",
-			},
-			incremental_selection = {
-				enable = true,
-				keymaps = {
-					init_selection = "<C-space>",
-					node_incremental = "<C-space>",
-					scope_incremental = false,
-					node_decremental = "<bs>",
-				},
-			},
+		-- parsers to keep installed (async; :TSUpdate keeps them current)
+		treesitter.install({
+			"json",
+			"javascript",
+			"typescript",
+			"tsx",
+			"yaml",
+			"html",
+			"css",
+			"prisma",
+			"markdown",
+			"markdown_inline",
+			"svelte",
+			"graphql",
+			"bash",
+			"lua",
+			"vim",
+			"dockerfile",
+			"gitignore",
+			"query",
+			"vimdoc",
+			"c",
 		})
 
 		-- use bash parser for zsh files
 		vim.treesitter.language.register("bash", "zsh")
+
+		-- enable highlighting + indentation for any buffer with an installed parser
+		vim.api.nvim_create_autocmd("FileType", {
+			callback = function(args)
+				local lang = vim.treesitter.language.get_lang(args.match)
+				if not (lang and vim.treesitter.language.add(lang)) then
+					return
+				end
+				-- highlighting (provided by Neovim core)
+				vim.treesitter.start(args.buf, lang)
+				-- treesitter-based indentation (experimental on main)
+				vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+			end,
+		})
 	end,
 }
